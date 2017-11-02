@@ -19,14 +19,23 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.InputType.TYPE_CLASS_TEXT
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.FuelManager
+import com.github.kittinunf.fuel.rx.rx_string
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.*
 import org.jetbrains.anko.cardview.v7.cardView
 import org.jetbrains.anko.recyclerview.v7.recyclerView
@@ -47,48 +56,62 @@ class SearchActivity : AppCompatActivity() {
 
         ui.tabList.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
 
-        ui.searchField.onEditorAction { v, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                searchTabs(v?.text.toString()) { data ->
-                    println("huhu")
-                    ui.tabList.swapAdapter(TabListAdapter(data), true)
+        val searchObservable: Observable<String> = Observable.create { emitter ->
+            ui.searchField.onEditorAction { v, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    emitter.onNext(v?.text.toString())
                 }
             }
         }
 
-        searchTabs("crazy train") { data ->
-            ui.tabList.swapAdapter(TabListAdapter(data), true)
-        }
+        searchObservable
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnNext { ui.showProgress() }
+                .observeOn(Schedulers.io())
+                .flatMap {
+                    val url = "https://www.ultimate-guitar.com/search.php?search_type=title&type=200&value=" + it
+                    Fuel.get(url).rx_string().toObservable()
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { result ->
+                    ui.hideProgress()
+                    val tabs = getTabs(result.toString())
+                    if (tabs.isEmpty()) {
+                        toast("Search gave no results.")
+                    }
+                    ui.tabList.swapAdapter(TabListAdapter(tabs), true)
+                }
     }
+
 }
 
 class SearchActivityUI(private val listAdapter: TabListAdapter) : AnkoComponent<SearchActivity> {
     lateinit var searchField: EditText
     lateinit var tabList: RecyclerView
+    private lateinit var progressBar: ProgressBar
 
     override fun createView(ui: AnkoContext<SearchActivity>) = with(ui) {
         verticalLayout {
             searchField = editText {
                 hint = "Song name"
-                imeOptions = EditorInfo.IME_ACTION_SEARCH
-                inputType = EditorInfo.TYPE_CLASS_TEXT
+                imeOptions = IME_ACTION_SEARCH
+                inputType = TYPE_CLASS_TEXT
             }
+
+            progressBar = progressBar { visibility = GONE }
 
             tabList = recyclerView {
                 adapter = listAdapter
             }
         }
     }
-}
 
-fun searchTabs(query: String, callback: (List<TabInfo>) -> Unit) {
-    val url = "https://www.ultimate-guitar.com/search.php?search_type=title&type=200&value=" + query
-    Fuel.get(url).response { _, response, _ ->
-        val doc = Jsoup.parse(response.toString())
-        val tabs = doc.select(".tresults tr")
-                .filter { it.getElementsByClass("tresults--rating").first()?.text()?.isNotBlank() ?: false }
-                .map { getTab(it) }
-        callback(tabs)
+    fun showProgress() {
+        progressBar.visibility = VISIBLE
+    }
+
+    fun hideProgress() {
+        progressBar.visibility = GONE
     }
 }
 
@@ -103,6 +126,13 @@ fun getTab(el: Element): TabInfo {
             votes
     )
 }
+
+fun getTabs(html: String): List<TabInfo> =
+        Jsoup.parse(html)
+                .select(".tresults tr")
+                .filter { it.getElementsByClass("tresults--rating").first()?.text()?.isNotBlank() == true}
+                .map { getTab(it) }
+
 
 class TabListAdapter(private val tabInfoList: List<TabInfo>) : RecyclerView.Adapter<TabViewHolder>() {
 
