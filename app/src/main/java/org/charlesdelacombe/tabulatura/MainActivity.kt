@@ -15,34 +15,22 @@ package org.charlesdelacombe.tabulatura
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.widget.Button
-import org.jetbrains.anko.*
+import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.startActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val ui = MainActivityUI()
-        ui.setContentView(this)
+        setContentView(R.layout.activity_main)
 
-        ui.searchButton.onClick {
+        searchButton.onClick {
             startActivity<SearchActivity>()
         }
 
-        ui.favButton.onClick {
+        favButton.onClick {
             startActivity<FavoritesActivity>()
-        }
-    }
-}
-
-class MainActivityUI : AnkoComponent<MainActivity> {
-    lateinit var searchButton: Button
-    lateinit var favButton: Button
-    override fun createView(ui: AnkoContext<MainActivity>) = with(ui) {
-        verticalLayout {
-            searchButton = button("Search")
-            favButton = button("Favorites")
         }
     }
 }

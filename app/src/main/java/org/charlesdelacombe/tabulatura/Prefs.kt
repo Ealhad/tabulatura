@@ -32,13 +32,13 @@ class Tabulatura : Application() {
     }
 }
 
-class Prefs (context: Context) {
-    private val PREFS_FILENAME = "org.charlesdelacombe.tablatura.prefs"
-    private val FONT_SIZE = "font_size"
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, 0)
+class Prefs(context: Context) {
+    private val _prefsFilename = "org.charlesdelacombe.tablatura.prefs"
+    private val _fontSize = "_fontSize"
+    private val prefs: SharedPreferences = context.getSharedPreferences(_prefsFilename, 0)
 
     var fontSize: Float
-        get() = prefs.getFloat(FONT_SIZE, 12f)
-        set(value) = prefs.edit().putFloat(FONT_SIZE, value).apply()
+        get() = prefs.getFloat(_fontSize, 12f)
+        set(value) = prefs.edit().putFloat(_fontSize, value).apply()
 }
 

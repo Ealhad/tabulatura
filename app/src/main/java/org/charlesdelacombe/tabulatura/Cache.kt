@@ -14,18 +14,20 @@
 package org.charlesdelacombe.tabulatura
 
 object Cache {
-    private val tabContentMap : HashMap <String, String> = HashMap()
-    private val tabInfosMap : HashMap <String, TabInfo> = HashMap()
+    private val tabContentMap: HashMap<String, String> = HashMap()
+    private val tabInfosMap: HashMap<String, TabInfo> = HashMap()
 
     fun hasContent(url: String) = tabContentMap.containsKey(url)
-
-    fun hasInfos(url: String) = tabInfosMap.containsKey(url)
 
     fun getContent(url: String) = tabContentMap.getValue(url)
 
     fun getInfos(url: String) = tabInfosMap.getValue(url)
 
-    fun saveContent(url: String, content: String) { tabContentMap.put(url, content) }
+    fun saveContent(url: String, content: String) {
+        tabContentMap.put(url, content)
+    }
 
-    fun saveInfos(infos: TabInfo) { tabInfosMap.put(infos.url, infos)}
+    fun saveInfos(infos: TabInfo) {
+        tabInfosMap.put(infos.url, infos)
+    }
 }

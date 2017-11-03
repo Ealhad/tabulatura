@@ -11,11 +11,14 @@
   ~ Please see COPYING for the complete licence.
   -->
 
-<resources>
-    <item name="rating" type="id" />
-    <item name="tabName" type="id" />
-    <item name="textFont" type="id" />
-    <item name="incFont" type="id" />
-    <item name="toggleFav" type="id" />
-    <item name="decFont" type="id" />
-</resources>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="5dp">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/tabListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</FrameLayout>

@@ -13,13 +13,14 @@
 
 package org.charlesdelacombe.tabulatura
 
-data class TabInfo (
+data class TabInfo(
         val name: String,
         val url: String,
         val note: Float,
         val votes: Int
 ) {
     var inFavorites: Boolean = false
+
     companion object {
         val TABLE_NAME = "TabInfo"
         val COLUMN_NAME = "name"
@@ -29,7 +30,7 @@ data class TabInfo (
     }
 }
 
-data class TabContent (
+data class TabContent(
         val url: String,
         var content: String
 ) {
