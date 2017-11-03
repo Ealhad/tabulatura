@@ -13,13 +13,10 @@
 
 package org.charlesdelacombe.tabulatura
 
-import android.graphics.Typeface
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.widget.Button
-import android.widget.TextView
 import com.github.kittinunf.fuel.Fuel
-import org.jetbrains.anko.*
+import kotlinx.android.synthetic.main.activity_display_tab.*
 import org.jetbrains.anko.db.*
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.jsoup.Jsoup
@@ -29,8 +26,7 @@ class DisplayTabActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val ui = DisplayTabActivityUI()
-        ui.setContentView(this)
+        setContentView(R.layout.activity_display_tab)
 
         val url = intent.getStringExtra("url")
 
@@ -51,41 +47,41 @@ class DisplayTabActivity : AppCompatActivity() {
         }
 
         if (Cache.hasContent(url)) {
-            ui.tabContent.text = Cache.getContent(url)
+            tabContentView.text = Cache.getContent(url)
         } else {
             Fuel.get(url).response { _, response, _ ->
                 val doc = Jsoup.parse(response.toString())
                 val content = doc.select(".js-tab-content").text()
                 Cache.saveContent(url, content)
                 tabContent.content = content
-                ui.tabContent.text = content
+                tabContentView.text = content
             }
         }
 
-        ui.tabName.text = tabInfos.name
+        tabNameView.text = tabInfos.name
 
         fun setFontSize(size: Float) {
-            ui.tabContent.textSize = size
+            tabContentView.textSize = size
         }
 
-        ui.incFont.onClick {
+        incFontButton.onClick {
             prefs.fontSize += 1
             setFontSize(prefs.fontSize)
         }
 
-        ui.decFont.onClick {
+        decFontButton.onClick {
             prefs.fontSize -= 1
             setFontSize(prefs.fontSize)
         }
 
-        ui.toggleFav.text = if (tabInfos.inFavorites) "unfav" else "fav"
+        toggleFavButton.text = if (tabInfos.inFavorites) "unfav" else "fav"
 
-        ui.toggleFav.onClick {
+        toggleFavButton.onClick {
             database.use {
                 if (tabInfos.inFavorites) {
                     delete(TabInfo.TABLE_NAME, TabInfo.COLUMN_URL + " = {url}", "url" to url)
                     tabInfos.inFavorites = false
-                    ui.toggleFav.text = "fav"
+                    toggleFavButton.text = "fav"
                 } else {
                     insert(
                             TabInfo.TABLE_NAME,
@@ -102,68 +98,10 @@ class DisplayTabActivity : AppCompatActivity() {
                     )
 
                     tabInfos.inFavorites = true
-                    ui.toggleFav.text = "unfav"
+                    toggleFavButton.text = "unfav"
                 }
             }
         }
 
     }
-}
-
-class DisplayTabActivityUI : AnkoComponent<DisplayTabActivity> {
-    lateinit var tabName: TextView
-    lateinit var tabContent: TextView
-    lateinit var decFont: Button
-    lateinit var incFont: Button
-    lateinit var toggleFav: Button
-
-    private val customStyle = { v: Any ->
-        when (v) {
-            is TextView -> v.padding = 5
-            is Button -> v.width = wrapContent
-        }
-    }
-
-    override fun createView(ui: AnkoContext<DisplayTabActivity>) = with(ui) {
-        relativeLayout {
-            tabName = textView {
-                id = R.id.tabName
-                textSize = 20f
-                typeface = Typeface.DEFAULT_BOLD
-            }
-
-            incFont = button("+") {
-                id = R.id.incFont
-            }.lparams {
-                alignParentEnd()
-            }
-
-            val textFont = textView("Font") {
-                id = R.id.textFont
-            }.lparams {
-                leftOf(incFont)
-            }
-
-            decFont = button("-") { id = R.id.decFont }.lparams {
-                leftOf(textFont)
-            }
-
-            toggleFav = button("fav") {
-            }.lparams { leftOf(decFont) }
-
-
-            scrollView {
-                horizontalScrollView {
-                    tabContent = textView {
-                        typeface = Typeface.MONOSPACE
-                        textSize = prefs.fontSize
-                    }
-
-                }
-            }
-                    .lparams {
-                        below(tabName)
-                    }
-        }
-    }.applyRecursively(customStyle)
 }
