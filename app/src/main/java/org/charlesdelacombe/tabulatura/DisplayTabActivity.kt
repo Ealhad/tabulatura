@@ -15,11 +15,13 @@ package org.charlesdelacombe.tabulatura
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.widget.SeekBar
 import com.github.kittinunf.fuel.Fuel
 import kotlinx.android.synthetic.main.activity_display_tab.*
 import org.jetbrains.anko.db.*
 import org.jetbrains.anko.sdk25.coroutines.onClick
 import org.jsoup.Jsoup
+
 
 class DisplayTabActivity : AppCompatActivity() {
 
@@ -60,19 +62,20 @@ class DisplayTabActivity : AppCompatActivity() {
 
         tabNameView.text = tabInfos.name
 
-        fun setFontSize(size: Float) {
-            tabContentView.textSize = size
-        }
+        // TODO handle this with zoom instead
+        fontSizeBar.progress = prefs.fontSize.toInt() * 5 - 8
+        fontSizeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int,
+                                           fromUser: Boolean) {
+                val size = 8 + progress / 5f
+                prefs.fontSize = size
+                tabContentView.textSize = size
+            }
 
-        incFontButton.onClick {
-            prefs.fontSize += 1
-            setFontSize(prefs.fontSize)
-        }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
 
-        decFontButton.onClick {
-            prefs.fontSize -= 1
-            setFontSize(prefs.fontSize)
-        }
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
 
         toggleFavButton.text = if (tabInfos.inFavorites) "unfav" else "fav"
 
@@ -102,6 +105,5 @@ class DisplayTabActivity : AppCompatActivity() {
                 }
             }
         }
-
     }
 }

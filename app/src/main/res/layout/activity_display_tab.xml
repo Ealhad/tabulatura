@@ -21,6 +21,7 @@
         android:id="@+id/tabNameView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="5dp"
         android:textSize="20sp"
         android:textStyle="bold"
         tools:text="Crazy Train" />
@@ -37,19 +38,12 @@
             android:layout_height="wrap_content"
             android:text="fav" />
 
-        <Button
-            android:id="@+id/decFontButton"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-" />
-
-        <Button
-            android:id="@+id/incFontButton"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+" />
+        <android.support.v7.widget.AppCompatSeekBar
+            android:id="@+id/fontSizeBar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:max="60"
+            android:progress="30" />
 
     </LinearLayout>
 
@@ -66,6 +60,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:fontFamily="monospace"
+                android:padding="5dp"
                 tools:text="This is totally some legit tab content. See? It's monospaced." />
         </HorizontalScrollView>
     </ScrollView>
