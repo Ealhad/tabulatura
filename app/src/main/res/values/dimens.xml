@@ -12,6 +12,5 @@
   -->
 
 <resources>
-    <string name="app_name">Tabulatura</string>
-    <string name="title_activity_main2">Main2Activity</string>
+    <dimen name="fab_margin">16dp</dimen>
 </resources>

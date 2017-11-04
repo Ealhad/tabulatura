@@ -15,6 +15,8 @@ package org.charlesdelacombe.tabulatura
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.SeekBar
 import com.github.kittinunf.fuel.Fuel
 import kotlinx.android.synthetic.main.activity_display_tab.*
@@ -24,6 +26,7 @@ import org.jsoup.Jsoup
 
 
 class DisplayTabActivity : AppCompatActivity() {
+    private lateinit var tabContent: TabContent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +36,7 @@ class DisplayTabActivity : AppCompatActivity() {
         val url = intent.getStringExtra("url")
 
         val tabInfos = Cache.getInfos(url)
-        val tabContent = TabContent(url, "")
+        tabContent = TabContent(url, "")
 
 
         val dbContent = database.use {
@@ -51,13 +54,7 @@ class DisplayTabActivity : AppCompatActivity() {
         if (Cache.hasContent(url)) {
             tabContentView.text = Cache.getContent(url)
         } else {
-            Fuel.get(url).response { _, response, _ ->
-                val doc = Jsoup.parse(response.toString())
-                val content = doc.select(".js-tab-content").text()
-                Cache.saveContent(url, content)
-                tabContent.content = content
-                tabContentView.text = content
-            }
+            fetchTab()
         }
 
         tabNameView.text = tabInfos.name
@@ -106,4 +103,28 @@ class DisplayTabActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun fetchTab() {
+        Fuel.get(tabContent.url).response { _, response, _ ->
+            val doc = Jsoup.parse(response.toString())
+            val content = doc.select(".js-tab-content").text()
+            Cache.saveContent(tabContent.url, content)
+            tabContent.content = content
+            tabContentView.text = content
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_display_tab, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean =
+            when (item?.itemId) {
+                R.id.refresh -> {
+                    fetchTab()
+                    true
+                }
+                else -> super.onOptionsItemSelected(item)
+            }
 }

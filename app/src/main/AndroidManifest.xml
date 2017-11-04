@@ -9,8 +9,7 @@
   ~ (at your option) any later version.
   ~
   ~ Please see COPYING for the complete licence.
-  -->
-
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.charlesdelacombe.tabulatura">
 

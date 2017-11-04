@@ -1,4 +1,4 @@
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ (c) Copyright 2017 Charles de Lacombe
   ~
   ~ This file is part of Tabulatura (https://github.com/Ealhad/tabulatura).
@@ -11,7 +11,9 @@
   ~ Please see COPYING for the complete licence.
   -->
 
-<resources>
-    <string name="app_name">Tabulatura</string>
-    <string name="title_activity_main2">Main2Activity</string>
-</resources>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/refresh"
+        android:title="Refresh" />
+</menu>

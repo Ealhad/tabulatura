@@ -72,3 +72,6 @@ kotlin {
         coroutines "enable"
     }
 }
+dependencies {
+    implementation 'com.android.support.constraint:constraint-layout:+'
+}
