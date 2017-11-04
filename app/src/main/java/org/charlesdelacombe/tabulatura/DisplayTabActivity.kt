@@ -19,7 +19,7 @@ import android.widget.SeekBar
 import com.github.kittinunf.fuel.Fuel
 import kotlinx.android.synthetic.main.activity_display_tab.*
 import org.jetbrains.anko.db.*
-import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.sdk25.coroutines.onCheckedChange
 import org.jsoup.Jsoup
 
 
@@ -77,15 +77,11 @@ class DisplayTabActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
 
-        toggleFavButton.text = if (tabInfos.inFavorites) "unfav" else "fav"
+        favoriteButton.isChecked = tabInfos.inFavorites
 
-        toggleFavButton.onClick {
+        favoriteButton.onCheckedChange { _, isChecked ->
             database.use {
-                if (tabInfos.inFavorites) {
-                    delete(TabInfo.TABLE_NAME, TabInfo.COLUMN_URL + " = {url}", "url" to url)
-                    tabInfos.inFavorites = false
-                    toggleFavButton.text = "fav"
-                } else {
+                if (isChecked) {
                     insert(
                             TabInfo.TABLE_NAME,
                             TabInfo.COLUMN_NAME to tabInfos.name,
@@ -101,7 +97,11 @@ class DisplayTabActivity : AppCompatActivity() {
                     )
 
                     tabInfos.inFavorites = true
-                    toggleFavButton.text = "unfav"
+                    favoriteButton.isChecked = true
+                } else {
+                    delete(TabInfo.TABLE_NAME, TabInfo.COLUMN_URL + " = {url}", "url" to url)
+                    tabInfos.inFavorites = false
+                    favoriteButton.isChecked = false
                 }
             }
         }
