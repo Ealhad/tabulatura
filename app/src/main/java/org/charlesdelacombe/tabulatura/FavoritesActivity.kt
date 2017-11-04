@@ -49,7 +49,7 @@ class FavoritesActivity : AppCompatActivity() {
                     TabInfo.COLUMN_NOTE,
                     TabInfo.COLUMN_VOTES
             )
-                    .exec { parseList(classParser()) }
+                    .exec { parseList(classParser<TabInfo>()) }
         }
     }
 }

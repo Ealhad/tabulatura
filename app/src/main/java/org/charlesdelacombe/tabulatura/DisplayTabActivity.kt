@@ -27,6 +27,8 @@ import org.jsoup.Jsoup
 
 class DisplayTabActivity : AppCompatActivity() {
     private lateinit var tabContent: TabContent
+    private lateinit var tabInfos: TabInfo
+    private var isFavorite = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,10 +37,15 @@ class DisplayTabActivity : AppCompatActivity() {
 
         val url = intent.getStringExtra("url")
 
-        val tabInfos = Cache.getInfos(url)
+        tabInfos = Cache.getInfos(url)
         tabContent = TabContent(url, "")
 
+        // Always check the cache first
+        if (Cache.hasContent(url)) {
+            tabContentView.text = Cache.getContent(url)
+        }
 
+        // Query DB anyway, to find if it is a favorite
         val dbContent = database.use {
             select(TabContent.TABLE_NAME, TabContent.COLUMN_CONTENT)
                     .whereArgs(TabContent.COLUMN_URL + " = {url}", "url" to url)
@@ -46,21 +53,22 @@ class DisplayTabActivity : AppCompatActivity() {
                     .exec { parseOpt(StringParser) }
         }
 
+        // We have a favorite!
         dbContent?.let {
-            tabInfos.inFavorites = true
             Cache.saveContent(url, it)
+            setFavorite(true)
+            tabContentView.text = it
         }
 
-        if (Cache.hasContent(url)) {
-            tabContentView.text = Cache.getContent(url)
-        } else {
-            fetchTab()
+        // Favorite or note, the content shouldn't be null.
+        if (dbContent.isNullOrBlank()) {
+            fetchTab(isFavorite)
         }
 
         tabNameView.text = tabInfos.name
 
         // TODO handle this with zoom instead
-        fontSizeBar.progress = prefs.fontSize.toInt() * 5 - 8
+        fontSizeBar.progress = (prefs.fontSize.toInt() - 8) * 5
         fontSizeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int,
                                            fromUser: Boolean) {
@@ -74,7 +82,7 @@ class DisplayTabActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
 
-        favoriteButton.isChecked = tabInfos.inFavorites
+        favoriteButton.isChecked = isFavorite
 
         favoriteButton.onCheckedChange { _, isChecked ->
             database.use {
@@ -92,25 +100,39 @@ class DisplayTabActivity : AppCompatActivity() {
                             TabContent.COLUMN_URL to url,
                             TabContent.COLUMN_CONTENT to tabContent.content
                     )
-
-                    tabInfos.inFavorites = true
-                    favoriteButton.isChecked = true
                 } else {
                     delete(TabInfo.TABLE_NAME, TabInfo.COLUMN_URL + " = {url}", "url" to url)
-                    tabInfos.inFavorites = false
-                    favoriteButton.isChecked = false
+                    delete(TabContent.TABLE_NAME, TabInfo.COLUMN_URL + " = {url}", "url" to url)
                 }
+                true
             }
+            setFavorite(isChecked)
         }
     }
 
-    private fun fetchTab() {
+    private fun setFavorite(isFavorite: Boolean) {
+        this.isFavorite = isFavorite
+        favoriteButton.isChecked = isFavorite
+        Cache.saveInfos(tabInfos)
+    }
+
+    private fun fetchTab(persist: Boolean = false) {
         Fuel.get(tabContent.url).response { _, response, _ ->
             val doc = Jsoup.parse(response.toString())
             val content = doc.select(".js-tab-content").text()
             Cache.saveContent(tabContent.url, content)
             tabContent.content = content
             tabContentView.text = content
+
+            if (persist) {
+                database.use {
+                    replace(
+                            TabContent.TABLE_NAME,
+                            TabContent.COLUMN_URL to tabContent.url,
+                            TabContent.COLUMN_CONTENT to tabContent.content
+                    )
+                }
+            }
         }
     }
 
@@ -122,7 +144,7 @@ class DisplayTabActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean =
             when (item?.itemId) {
                 R.id.refresh -> {
-                    fetchTab()
+                    fetchTab(isFavorite)
                     true
                 }
                 else -> super.onOptionsItemSelected(item)

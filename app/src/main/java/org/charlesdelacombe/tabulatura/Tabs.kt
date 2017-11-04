@@ -19,8 +19,6 @@ data class TabInfo(
         val note: Float,
         val votes: Int
 ) {
-    var inFavorites: Boolean = false
-
     companion object {
         val TABLE_NAME = "TabInfo"
         val COLUMN_NAME = "name"
